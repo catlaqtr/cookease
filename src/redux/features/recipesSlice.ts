@@ -1,10 +1,10 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-interface Ingredient {
+export interface Ingredient {
   id: number;
   original: string;
 }
 
-type Recipe = {
+export type Recipe = {
   id: number;
   title: string;
   image: string;
@@ -12,7 +12,7 @@ type Recipe = {
   extendedIngredients: Ingredient[];
 };
 
-type RecipesState = {
+export type RecipesState = {
   recipes: Recipe[];
   query: string;
   loading: boolean;
@@ -36,7 +36,9 @@ export const fetchRecipes = createAsyncThunk(
   "recipes/fetchRecipes",
   async (query: string) => {
     const response = await fetch(
-      `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey=71b8c5c867ef4f4e92d07ce49d9503be`
+      `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey=${
+        import.meta.env.VITE_SPOONACULAR_KEY
+      }`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch recipes");
@@ -50,7 +52,9 @@ export const fetchRecipeDetails = createAsyncThunk(
   "recipes/fetchRecipeDetails",
   async (id: number) => {
     const response = await fetch(
-      `https://api.spoonacular.com/recipes/${id}/information?apiKey=71b8c5c867ef4f4e92d07ce49d9503be`
+      `https://api.spoonacular.com/recipes/${id}/information?apiKey=${
+        import.meta.env.VITE_SPOONACULAR_KEY
+      }`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch recipe details");
@@ -106,4 +110,3 @@ const recipesSlice = createSlice({
 
 export const { setQuery } = recipesSlice.actions;
 export default recipesSlice.reducer;
-export type { Recipe };

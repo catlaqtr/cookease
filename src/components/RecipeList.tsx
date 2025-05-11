@@ -5,9 +5,15 @@ import Modal from "./Modal";
 import { AppDispatch } from "../redux/store";
 import { fetchRecipeDetails } from "../redux/features/recipesSlice";
 import { useState } from "react";
-import { Recipe } from "../redux/features/recipesSlice";
+import type { Recipe } from "../redux/features/recipesSlice";
+import RecipeDetails from "./RecipeDetails";
+import { RefObject } from "react";
 
-function RecipeList() {
+function RecipeList({
+  searchInputRef,
+}: {
+  searchInputRef: RefObject<HTMLInputElement | null>;
+}) {
   const { recipes, loading, error } = useSelector(
     (state: RootState) => state.recipes
   );
@@ -20,10 +26,22 @@ function RecipeList() {
 
   return (
     <div className="flex flex-col items-center justify-center mt-4">
-      {loading && <p>Loading...</p>}
+      {loading && (
+        <div className="flex items-center justify-center h-64 w-full">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
       {error && <p className="text-red-500">{error}</p>}
       {!loading && !error && recipes.length === 0 && (
-        <p>No recipes found. Please try a different search.</p>
+        <div className="text-center mt-12 text-gray-500">
+          <p className="text-2xl mb-2">😕 No recipes found</p>
+          <p className="text-sm">
+            Try searching for something else like{" "}
+            <span className="italic text-blue-600">chicken</span> or{" "}
+            <span className="italic text-blue-600">pasta</span>.
+          </p>
+        </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {recipes.map((recipe) => (
@@ -35,37 +53,27 @@ function RecipeList() {
               dispatch(fetchRecipeDetails(recipe.id));
               setIsModalOpen(true);
             }}
+            isActive={selectedRecipe?.id === recipe.id}
           />
         ))}
       </div>
       {selectedRecipe && (
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-          {loadingDetails && <p>Loading...</p>}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            searchInputRef.current?.focus();
+          }}
+        >
+          {loadingDetails && (
+            <div className="flex items-center justify-center h-64 w-full">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+
           {detailsError && <p className="text-red-500">{detailsError}</p>}
           {selectedRecipeDetails && (
-            <div>
-              <h2 className="text-lg font-bold">
-                {selectedRecipeDetails.title}
-              </h2>
-              <img
-                src={selectedRecipeDetails.image}
-                alt={selectedRecipeDetails.title}
-                className="w-full h-32 object-cover rounded"
-              />
-              <p
-                className="mt-2"
-                dangerouslySetInnerHTML={{
-                  __html: selectedRecipeDetails.summary,
-                }}
-              ></p>
-
-              <h3 className="font-bold">Ingredients:</h3>
-              <ul>
-                {selectedRecipeDetails.extendedIngredients.map((ingredient) => (
-                  <li key={ingredient.id}>{ingredient.original}</li>
-                ))}
-              </ul>
-            </div>
+            <RecipeDetails recipe={selectedRecipeDetails} />
           )}
         </Modal>
       )}
